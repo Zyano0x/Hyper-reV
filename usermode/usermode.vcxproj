@@ -173,6 +173,7 @@
     <ClCompile Include="src\hypercall\hypercall.cpp" />
     <ClCompile Include="src\logs\logs.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\script\script.cpp" />
     <ClCompile Include="src\system\system.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +191,7 @@
     <ClInclude Include="ext\portable_executable\optional_header.hpp" />
     <ClInclude Include="ext\portable_executable\relocations_directory.hpp" />
     <ClInclude Include="ext\portable_executable\section_header.hpp" />
+    <ClInclude Include="src\assembler\assembler.h" />
     <ClInclude Include="src\commands\commands.h" />
     <ClInclude Include="src\commands\kernel_hook\kernel_hook.h" />
     <ClInclude Include="src\hook\hook.h" />
@@ -197,6 +199,7 @@
     <ClInclude Include="src\hook\kernel_detour_holder.h" />
     <ClInclude Include="src\hypercall\hypercall.h" />
     <ClInclude Include="src\logs\logs.h" />
+    <ClInclude Include="src\script\script.h" />
     <ClInclude Include="src\system\system.h" />
     <ClInclude Include="src\system\system_def.h" />
   </ItemGroup>

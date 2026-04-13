@@ -18,6 +18,8 @@ namespace sys
 		std::uint8_t parse_modules();
 		std::uint8_t dump_module_to_disk(std::string_view target_module_name, std::string_view output_directory);
 
+		std::unordered_map<std::string, std::uint64_t> compile_symbol_list();
+
 		inline std::unordered_map<std::string, kernel_module_t> modules_list = {};
 	}
 
@@ -40,7 +42,8 @@ namespace sys
 	{
 		std::uint8_t exists(std::string_view path);
 
-		std::uint8_t write_to_disk(std::string_view full_path, std::span<const std::uint8_t> buffer);
+		std::vector<std::uint8_t> read_from_disk(const std::string& full_path);
+		std::uint8_t write_to_disk(const std::string& full_path, std::span<const std::uint8_t> buffer);
 	}
 
 	struct kernel_module_t

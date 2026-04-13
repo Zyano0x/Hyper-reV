@@ -1,7 +1,8 @@
 {
   "dependencies": [
-    "spdlog",
+    "keystone",
     "zydis",
+    "spdlog",
     "cli11"
   ]
 }

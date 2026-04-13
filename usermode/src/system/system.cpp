@@ -280,6 +280,19 @@ std::uint8_t sys::kernel::dump_module_to_disk(const std::string_view target_modu
 	return fs::write_to_disk(output_path, buffer);
 }
 
+std::unordered_map<std::string, std::uint64_t> sys::kernel::compile_symbol_list()
+{
+	std::unordered_map<std::string, std::uint64_t> aliases = { {"current_cr3", current_cr3} };
+
+	for (auto& [module_name, module_info] : modules_list)
+	{
+		aliases.insert({ module_name, module_info.base_address });
+		aliases.insert(module_info.exports.begin(), module_info.exports.end());
+	}
+
+	return aliases;
+}
+
 struct ntoskrnl_information_t
 {
 	std::uint64_t base_address;
@@ -470,7 +483,19 @@ std::uint8_t sys::fs::exists(const std::string_view path)
 	return static_cast<std::uint8_t>(std::filesystem::exists(path));
 }
 
-std::uint8_t sys::fs::write_to_disk(const std::string_view full_path, const std::span<const std::uint8_t> buffer)
+std::vector<std::uint8_t> sys::fs::read_from_disk(const std::string& full_path)
+{
+	std::ifstream file(full_path, std::ios::binary);
+
+	if (file.is_open())
+	{
+		return { std::istreambuf_iterator(file), { } };
+	}
+
+	return { };
+}
+
+std::uint8_t sys::fs::write_to_disk(const std::string& full_path, const std::span<const std::uint8_t> buffer)
 {
 	std::ofstream file(full_path.data(), std::ios::binary);
 

@@ -9,6 +9,8 @@
 #include <array>
 #include <ranges>
 
+#include "../script/script.h"
+
 #define INVOKE_COMMAND_PROCESSOR(command) process_##command(command)
 #define PROCESS_INITIAL_COMMAND(command) if (*command) INVOKE_COMMAND_PROCESSOR(command)
 #define PROCESS_COMMAND(command) else if (*command) INVOKE_COMMAND_PROCESSOR(command)
@@ -287,6 +289,8 @@ static CLI::App* init_akh(CLI::App& app, const CLI::Transformer& aliases_transfo
 	                         ->ignore_case();
 
 	add_transformed_command_option(akh, "virtual_address", aliases_transformer)->required();
+	add_command_option(akh, "--script_text")->multi_option_policy(CLI::MultiOptionPolicy::TakeAll)->expected(-1);
+	add_command_option(akh, "--script_file")->multi_option_policy(CLI::MultiOptionPolicy::TakeAll)->expected(-1);
 	add_command_option(akh, "--asmbytes")->multi_option_policy(CLI::MultiOptionPolicy::TakeAll)->expected(-1);
 	add_command_option(akh, "--post_original_asmbytes")->multi_option_policy(CLI::MultiOptionPolicy::TakeAll)->
 	                                                     expected(-1);
@@ -300,6 +304,23 @@ static void process_akh(const CLI::App* const akh)
 	const auto virtual_address = get_command_option<std::uint64_t>(akh, "virtual_address");
 
 	auto asm_bytes = get_command_option<std::vector<uint8_t>>(akh, "--asmbytes");
+
+	const auto script_contents = get_command_option<std::string>(akh, "--script_text");
+	const auto script_file = get_command_option<std::string>(akh, "--script_file");
+
+	if (!script_contents.empty())
+	{
+		const auto compiled_script_bytes = script::compile(script_contents);
+
+		asm_bytes.insert_range(asm_bytes.end(), compiled_script_bytes);
+	}
+	else if (!script_file.empty())
+	{
+		const auto compiled_script_bytes = script::compile_from_path(script_file);
+
+		asm_bytes.insert_range(asm_bytes.end(), compiled_script_bytes);
+	}
+
 	const auto post_original_asm_bytes = get_command_option<std::vector<uint8_t>>(akh, "--post_original_asmbytes");
 
 	const std::uint8_t monitor = get_command_flag(akh, "--monitor");
@@ -552,19 +573,6 @@ static void process_gva(const CLI::App* const gva)
 	LOG_INFO("alias value: 0x{:X}", alias_value);
 }
 
-static std::unordered_map<std::string, std::uint64_t> form_aliases()
-{
-	std::unordered_map<std::string, std::uint64_t> aliases = {{"current_cr3", sys::current_cr3}};
-
-	for (auto& [module_name, module_info] : sys::kernel::modules_list)
-	{
-		aliases.insert({module_name, module_info.base_address});
-		aliases.insert(module_info.exports.begin(), module_info.exports.end());
-	}
-
-	return aliases;
-}
-
 void commands::process(const std::string& command)
 {
 	if (command.empty())
@@ -577,7 +585,7 @@ void commands::process(const std::string& command)
 
 	sys::kernel::parse_modules();
 
-	const std::unordered_map<std::string, std::uint64_t> aliases = form_aliases();
+	const std::unordered_map<std::string, std::uint64_t> aliases = sys::kernel::compile_symbol_list();
 
 	const auto aliases_transformer = CLI::Transformer(aliases, CLI::ignore_case);
 
